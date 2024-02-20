@@ -1,13 +1,26 @@
 from flask import Flask, request
 import sqlite3
+import os
 from werkzeug.exceptions import abort
 
 app = Flask(__name__)
 
+DB = './db/database.db'
+
+def create_db():
+    conn = sqlite3.connect(DB)
+    with open('schema.sql') as f:
+        conn.executescript(f.read())
+    conn.close()
+
 def get_db_connection():
-    conn = sqlite3.connect('database.db')
+    if not os.path.isfile(DB):
+        create_db()
+    
+    conn = sqlite3.connect(DB)
     conn.row_factory = sqlite3.Row
     return conn
+
 
 def querySingle(sql, args):
     try:
@@ -108,3 +121,7 @@ def delete(post_id):
         return str(e), 500
     finally:
         conn.close()
+
+
+if __name__ == '__main__':
+    app.run(host="0.0.0.0", port=5000)
